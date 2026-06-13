@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+
+/* ── Custom scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar              { width: 5px; height: 5px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover  { background: #94a3b8; }
+
+/* ── Smooth transitions everywhere ────────────────────────── */
+* { transition-property: color, background-color, border-color, box-shadow;
+    transition-duration: 150ms; transition-timing-function: ease; }
+
+/* ── Better focus rings ────────────────────────────────────── */
+input:focus, select:focus, textarea:focus, button:focus {
+    outline: none;
+}
+
+/* ── Table hover rows ──────────────────────────────────────── */
+tbody tr:hover { background-color: #f8fafc; }
+
+/* ── Card shadow ───────────────────────────────────────────── */
+.card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* ── Button styles ─────────────────────────────────────────── */
+.btn-primary {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+    background: white;
+    color: #374151;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+}
+.btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* ── Status badges ─────────────────────────────────────────── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+/* ── Stat card ─────────────────────────────────────────────── */
+.stat-card {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.stat-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+/* ── Page enter animation ──────────────────────────────────── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-content { animation: fadeInUp 0.2s ease; }
+
+/* ── Input base ────────────────────────────────────────────── */
+.input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #f8fafc;
+    transition: all 0.15s;
+}
+.input:focus {
+    background: white;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+}
+
+/* ── Print: hide sidebar ───────────────────────────────────── */
+@media print {
+    aside, header, .no-print { display: none !important; }
+    main { overflow: visible !important; }
+}
