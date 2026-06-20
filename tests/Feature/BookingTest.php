@@ -245,4 +245,51 @@ class BookingTest extends TestCase
             $this->service->isRoomAvailable($this->room->id, '2026-08-05', '2026-08-08')
         );
     }
+
+    public function test_past_checkin_date_is_rejected(): void
+    {
+        $response = $this->actingAs($this->receptionist, 'employee')
+            ->from(route('bookings.create'))
+            ->post(route('bookings.store'), [
+                'room_id'       => $this->room->id,
+                'guest_id'      => $this->guest->id,
+                'checkin_date'  => today()->subDay()->format('Y-m-d'),
+                'checkout_date' => today()->addDay()->format('Y-m-d'),
+                'adults'        => 1,
+            ]);
+
+        $response->assertSessionHasErrors('checkin_date');
+    }
+
+    public function test_same_day_checkout_is_rejected(): void
+    {
+        $date = today()->format('Y-m-d');
+
+        $response = $this->actingAs($this->receptionist, 'employee')
+            ->from(route('bookings.create'))
+            ->post(route('bookings.store'), [
+                'room_id'       => $this->room->id,
+                'guest_id'      => $this->guest->id,
+                'checkin_date'  => $date,
+                'checkout_date' => $date,
+                'adults'        => 1,
+            ]);
+
+        $response->assertSessionHasErrors('checkout_date');
+    }
+
+    public function test_excessive_stay_length_is_rejected(): void
+    {
+        $response = $this->actingAs($this->receptionist, 'employee')
+            ->from(route('bookings.create'))
+            ->post(route('bookings.store'), [
+                'room_id'       => $this->room->id,
+                'guest_id'      => $this->guest->id,
+                'checkin_date'  => today()->format('Y-m-d'),
+                'checkout_date' => today()->addDays(366)->format('Y-m-d'),
+                'adults'        => 1,
+            ]);
+
+        $response->assertSessionHasErrors('checkout_date');
+    }
 }

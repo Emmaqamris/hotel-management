@@ -6,9 +6,9 @@ use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
 use App\Models\Booking;
 use App\Models\Room;
+use App\Support\BookingDateRules;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class BookingService
 {
@@ -41,13 +41,9 @@ class BookingService
                 );
             }
 
-            $checkin  = Carbon::parse($data['checkin_date']);
-            $checkout = Carbon::parse($data['checkout_date']);
-            $nights   = $checkin->diffInDays($checkout);
+            BookingDateRules::assertValidStay($data['checkin_date'], $data['checkout_date']);
 
-            if ($nights < 1) {
-                throw new \Exception('Checkout must be at least one night after check-in.');
-            }
+            $nights = BookingDateRules::nights($data['checkin_date'], $data['checkout_date']);
 
             $totalAmount = round((float)$room->price_per_night * $nights, 2);
 
@@ -233,7 +229,7 @@ class BookingService
         string $checkin,
         string $checkout
     ): array {
-        $nights    = Carbon::parse($checkin)->diffInDays(Carbon::parse($checkout));
+        $nights    = BookingDateRules::nights($checkin, $checkout);
         $subtotal  = round($pricePerNight * $nights, 2);
         $taxRate   = $this->hotel->tax_rate;
         $taxAmount = round($subtotal * ($taxRate / 100), 2);

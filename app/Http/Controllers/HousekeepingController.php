@@ -20,7 +20,15 @@ class HousekeepingController extends Controller
             ->when($request->priority, fn($q) => $q->where('priority', $request->priority))
             ->when($request->date,   fn($q) => $q->whereDate('scheduled_at', $request->date))
             ->when($employee->isHousekeeper(), fn($q) => $q->where('assigned_to', $employee->id))
-            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'normal', 'low')")
+            ->orderByRaw("
+                CASE priority
+                    WHEN 'urgent' THEN 1
+                    WHEN 'high' THEN 2
+                    WHEN 'normal' THEN 3
+                    WHEN 'low' THEN 4
+                    ELSE 5
+                END
+            ")
             ->orderBy('scheduled_at')
             ->paginate(20)
             ->withQueryString();

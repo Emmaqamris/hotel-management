@@ -7,9 +7,9 @@ use App\Http\Resources\RoomResource;
 use App\Http\Traits\ApiResponds;
 use App\Models\Room;
 use App\Services\BookingService;
+use App\Support\BookingDateRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class RoomController extends Controller
 {
@@ -40,12 +40,18 @@ class RoomController extends Controller
     // GET /api/rooms/available?checkin_date=&checkout_date=&adults=
     public function available(Request $request): JsonResponse
     {
-        $request->validate([
-            'checkin_date'  => ['required', 'date', 'after_or_equal:today'],
-            'checkout_date' => ['required', 'date', 'after:checkin_date'],
-            'adults'        => ['nullable', 'integer', 'min:1'],
-            'type'          => ['nullable', 'string'],
-        ]);
+        $request->validate(
+            array_merge(BookingDateRules::rules(), [
+                'adults' => ['nullable', 'integer', 'min:1', 'max:10'],
+                'type'   => ['nullable', 'string'],
+            ]),
+            BookingDateRules::messages()
+        );
+
+        BookingDateRules::assertValidStay(
+            $request->checkin_date,
+            $request->checkout_date
+        );
 
         $rooms = $this->bookingService->searchAvailableRooms(
             $request->user()->hotel_id,

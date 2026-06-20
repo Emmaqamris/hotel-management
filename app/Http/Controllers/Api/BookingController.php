@@ -7,6 +7,7 @@ use App\Http\Resources\BookingResource;
 use App\Http\Traits\ApiResponds;
 use App\Models\Booking;
 use App\Models\Room;
+use App\Support\BookingDateRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -44,13 +45,24 @@ class BookingController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'room_id'       => ['required', 'exists:rooms,id'],
-            'guest_id'      => ['required', 'exists:guests,id'],
-            'checkin_date'  => ['required', 'date'],
-            'checkout_date' => ['required', 'date', 'after:checkin_date'],
-            'adults'        => ['required', 'integer', 'min:1'],
-        ]);
+        $data = $request->validate(
+            array_merge(BookingDateRules::rules(), [
+                'room_id'  => ['required', 'exists:rooms,id'],
+                'guest_id' => ['required', 'exists:guests,id'],
+                'adults'   => ['required', 'integer', 'min:1', 'max:10'],
+            ]),
+            BookingDateRules::messages()
+        );
+
+        try {
+            BookingDateRules::assertValidStay($data['checkin_date'], $data['checkout_date']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'errors'  => ['checkout_date' => [$e->getMessage()]],
+            ], 422);
+        }
 
         $hotelId = $request->user()->hotel_id;
 
@@ -83,11 +95,7 @@ class BookingController extends Controller
             ], 422);
         }
 
-        $nights = max(
-            1,
-            now()->parse($data['checkin_date'])
-                ->diffInDays(now()->parse($data['checkout_date']))
-        );
+        $nights = BookingDateRules::nights($data['checkin_date'], $data['checkout_date']);
 
         $booking = Booking::create([
             'booking_number' => 'BK-' . strtoupper(Str::random(8)),

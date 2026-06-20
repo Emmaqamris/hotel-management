@@ -135,16 +135,16 @@ $roomStatus = [
             $from->format('Y-m-d'),
             $to->format('Y-m-d'),
         ])
-        ->selectRaw('
-            COUNT(*) as total,
-            SUM(CASE WHEN status = "confirmed" THEN 1 ELSE 0 END) as confirmed,
-            SUM(CASE WHEN status = "checked_in" THEN 1 ELSE 0 END) as checked_in,
-            SUM(CASE WHEN status = "checked_out" THEN 1 ELSE 0 END) as checked_out,
-            SUM(CASE WHEN status = "cancelled" THEN 1 ELSE 0 END) as cancelled,
-            SUM(CASE WHEN status = "no_show" THEN 1 ELSE 0 END) as no_show,
-            SUM(total_amount) as total_value,
-            AVG(DATEDIFF(checkout_date, checkin_date)) as avg_stay_length
-        ')
+        ->selectRaw("
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'confirmed'   THEN 1 ELSE 0 END) as confirmed,
+    SUM(CASE WHEN status = 'checked_in'  THEN 1 ELSE 0 END) as checked_in,
+    SUM(CASE WHEN status = 'checked_out' THEN 1 ELSE 0 END) as checked_out,
+    SUM(CASE WHEN status = 'cancelled'   THEN 1 ELSE 0 END) as cancelled,
+    SUM(CASE WHEN status = 'no_show'     THEN 1 ELSE 0 END) as no_show,
+    SUM(total_amount) as total_value,
+    AVG(checkout_date - checkin_date) as avg_stay_length
+")
         ->first();
 
     $dailyCount = Booking::where('hotel_id', $hotelId)

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Guest;
 use App\Models\Room;
 use App\Services\BookingService;
+use App\Support\BookingDateRules;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
@@ -43,45 +44,53 @@ class BookingController extends Controller
     }
 
     public function create(Request $request)
-{
-    $hotelId = auth()->user()->hotel_id ?? 1;
+    {
+        $hotelId = auth()->user()->hotel_id ?? 1;
 
-    $checkin = $request->get(
-        'checkin_date',
-        today()->format('Y-m-d')
-    );
+        $validated = $request->validate(array_merge(
+            BookingDateRules::searchRules(),
+            [
+                'adults' => ['nullable', 'integer', 'min:1', 'max:10'],
+                'type'   => ['nullable', 'string'],
+            ]
+        ), BookingDateRules::messages());
 
-    $checkout = $request->get(
-        'checkout_date',
-        today()->addDay()->format('Y-m-d')
-    );
+        $checkin = $validated['checkin_date']
+            ?? today()->format('Y-m-d');
 
-    $adults = $request->get('adults', 1);
-    $type = $request->get('type', '');
+        $checkout = $validated['checkout_date']
+            ?? today()->addDay()->format('Y-m-d');
 
-    $availableRooms = $this->bookingService->searchAvailableRooms(
-        $hotelId,
-        $checkin,
-        $checkout
-    );
+        if ($request->filled('checkin_date') || $request->filled('checkout_date')) {
+            BookingDateRules::assertValidStay($checkin, $checkout);
+        }
 
-    if ($type) {
-        $availableRooms = $availableRooms->where('type', $type);
+        $adults = $validated['adults'] ?? 1;
+        $type   = $validated['type'] ?? '';
+
+        $availableRooms = $this->bookingService->searchAvailableRooms(
+            $hotelId,
+            $checkin,
+            $checkout
+        );
+
+        if ($type) {
+            $availableRooms = $availableRooms->where('type', $type);
+        }
+
+        $guests = Guest::where('hotel_id', $hotelId)
+            ->orderBy('first_name')
+            ->get();
+
+        return view('bookings.create', compact(
+            'availableRooms',
+            'guests',
+            'checkin',
+            'checkout',
+            'adults',
+            'type'
+        ));
     }
-
-    $guests = Guest::where('hotel_id', $hotelId)
-        ->orderBy('first_name')
-        ->get();
-
-    return view('bookings.create', compact(
-        'availableRooms',
-        'guests',
-        'checkin',
-        'checkout',
-        'adults',
-        'type'
-    ));
-}
 
     public function store(StoreBookingRequest $request)
     {
